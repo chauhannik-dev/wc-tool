@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 func countCharacters(filename string) (int, error) {
@@ -51,10 +52,36 @@ func countLines(filename string) (int, error) {
 	return lineCount, nil
 }
 
+func countWords(filename string) (int, error) {
+	file, err := os.Open(filename)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	wordsCount := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		words := strings.Split(line, " ")
+		wordsCount += len(words)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+
+	return wordsCount, nil
+}
+
 func main() {
 	// Define flags
 	countFlag := flag.Bool("c", false, "count characters flag")
 	linesFlag := flag.Bool("l", false, "count lines flag")
+	wordsFlag := flag.Bool("w", false, "count words flag")
 
 	flag.Parse() // parses the value of the flag
 
@@ -85,6 +112,16 @@ func main() {
 		}
 
 		fmt.Println(lines, filename)
+	}
+
+	if *wordsFlag {
+		words, err := countWords(filename)
+		if err != nil {
+			fmt.Println("Error counting the words: ", err)
+			os.Exit(1)
+		}
+
+		fmt.Println(words, filename)
 	}
 
 }
