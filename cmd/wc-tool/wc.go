@@ -4,40 +4,23 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 )
 
-func countCharacters(filename string) (int, error) {
-	file, err := os.Open(filename)
+func countBytes(file *os.File) (int64, error) {
+	info, err := file.Stat()
 
-	if err != nil {
-		fmt.Println("Error opening the file")
-		os.Exit(1)
-	}
-
-	defer file.Close()
-
-	content, err := io.ReadAll(file)
 	if err != nil {
 		return 0, err
 	}
 
-	totalChars := len(content)
+	size := info.Size()
 
-	return totalChars, nil
+	return size, nil
 }
 
-func countLines(filename string) (int, error) {
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return 0, err
-	}
-
-	defer file.Close()
-
+func countLines(file *os.File) (int, error) {
 	scanner := bufio.NewScanner(file)
 
 	lineCount := 0
@@ -52,15 +35,7 @@ func countLines(filename string) (int, error) {
 	return lineCount, nil
 }
 
-func countWords(filename string) (int, error) {
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return 0, err
-	}
-
-	defer file.Close()
-
+func countWords(file *os.File) (int, error) {
 	scanner := bufio.NewScanner(file)
 
 	wordsCount := 0
@@ -79,7 +54,7 @@ func countWords(filename string) (int, error) {
 
 func main() {
 	// Define flags
-	countFlag := flag.Bool("c", false, "count characters flag")
+	countFlag := flag.Bool("c", false, "count bytes flag")
 	linesFlag := flag.Bool("l", false, "count lines flag")
 	wordsFlag := flag.Bool("w", false, "count words flag")
 
@@ -94,8 +69,17 @@ func main() {
 
 	filename := args[0]
 
+	file, err := os.Open(filename)
+
+	if err != nil {
+		fmt.Println("Error opening a file")
+		os.Exit(1)
+	}
+
+	defer file.Close()
+
 	if *countFlag {
-		totalChars, err := countCharacters(filename)
+		totalChars, err := countBytes(file)
 		if err != nil {
 			fmt.Println("Error counting the characters: ", err)
 			os.Exit(1)
@@ -105,7 +89,7 @@ func main() {
 	}
 
 	if *linesFlag {
-		lines, err := countLines(filename)
+		lines, err := countLines(file)
 		if err != nil {
 			fmt.Println("Error counting the lines: ", err)
 			os.Exit(1)
@@ -115,7 +99,7 @@ func main() {
 	}
 
 	if *wordsFlag {
-		words, err := countWords(filename)
+		words, err := countWords(file)
 		if err != nil {
 			fmt.Println("Error counting the words: ", err)
 			os.Exit(1)
