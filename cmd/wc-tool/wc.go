@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"io"
@@ -27,9 +28,33 @@ func countCharacters(filename string) (int, error) {
 	return totalChars, nil
 }
 
+func countLines(filename string) (int, error) {
+	file, err := os.Open(filename)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	lineCount := 0
+	for scanner.Scan() {
+		lineCount++
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+
+	return lineCount, nil
+}
+
 func main() {
 	// Define flags
-	countFlag := flag.Bool("c", false, "count characters in the flag")
+	countFlag := flag.Bool("c", false, "count characters flag")
+	linesFlag := flag.Bool("l", false, "count lines flag")
 
 	flag.Parse() // parses the value of the flag
 
@@ -50,6 +75,16 @@ func main() {
 		}
 
 		fmt.Println(totalChars, filename)
+	}
+
+	if *linesFlag {
+		lines, err := countLines(filename)
+		if err != nil {
+			fmt.Println("Error counting the lines: ", err)
+			os.Exit(1)
+		}
+
+		fmt.Println(lines, filename)
 	}
 
 }
